@@ -1,5 +1,5 @@
 {
-  "name": "classroom",
+  "name": "zoomclone",
   "version": "1.0.0",
   "description": "Classroom webService to host video conferencing",
   "main": "app.js",
