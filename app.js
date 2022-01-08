@@ -27,7 +27,8 @@ io.on('connection', socket => {
         socket.on('message', (message) => {
             io.sockets.in(roomId).emit('message-to-all', message, userId)
         });
-        socket.on('disconnect', () => {
+        socket.on('disconnect-user', () => {
+            console.log('user disconnected on closing the browser tab')
             socket.broadcast.to(roomId).emit('user-disconnected', userId);
         });
     });

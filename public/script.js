@@ -20,6 +20,12 @@ getUserMedia({
             const video = document.createElement('video');
             addVideoStream(call.peer, video, remoteStream)
         })
+        // call.on('close', () => {
+        //     socket.emit('disconnect-user');
+        //     socket.on('user-disconnected', (id) => {
+        //         removeVideoStream(id);
+        //     })
+        // })
         call.on('error', err => {
             console.log(err);
         })
@@ -45,16 +51,17 @@ getUserMedia({
 var peer = new Peer(undefined, {
     path: '/peerjs',
     host: '/',
-    port: 443,
+    port: 3030,
 })
 
 peer.on('open', id => {
     socket.emit('join-room', ROOM_ID, id);
 });
 
-// peer.on('close', () => {
-//     socket.emit('disconnect');
-// })
+peer.on('close', () => {
+    socket.emit('disconnect-user');
+})
+
 
 socket.on('user-disconnected', (userId) => {
     removeVideoStream(userId);
@@ -80,7 +87,7 @@ const connectToNewUser = (userId, localStream) => {
 //method to addvideo on the browser
 const addVideoStream = (userId, video, stream) => {
     video.srcObject = stream;
-    video.id = userId;
+    video.className = userId;
     document.getElementById('video-grid').appendChild(video);
     video.addEventListener('loadedmetadata', () => {
         video.play();
@@ -88,9 +95,16 @@ const addVideoStream = (userId, video, stream) => {
 }
 
 const removeVideoStream = (id) => {
-    let video = document.getElementById(id);
-    if(video){
-        video.remove();
+    let videosCollection = document.getElementsByClassName(id);
+    //the last element wasn't deleting by iterating over the html collection
+    //so had convert this into an array or iterate html collection in reverse order
+    let videosArr = Array.prototype.slice.call(videosCollection, 0);
+    console.log(videosArr)
+    if(videosArr){
+        for (const video of videosArr) {
+            console.log(`${video} removed`);
+            video.remove();   
+        }
     }
 }
 
@@ -194,9 +208,15 @@ var toggleMessageWindow = (event) => {
     }
 }
 
+window.addEventListener('beforeunload', (e) => {
+    e.preventDefault();
+    console.log('beforeunload fired')
+    socket.emit('disconnect-user');
+})
+
 var leaveMeeting = (event) => {
-    window.addEventListener('beforeunload', () => {
-        socket.emit('disconnect');
-    })
+    // window.addEventListener('beforeunload', () => {
+        socket.emit('disconnect-user');
+    // })
     window.location = '/';
 }
